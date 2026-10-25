@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scan History — PhishGuard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div class="logo">PG</div>
+      <div class="brand-copy">
+        <p class="eyebrow">CYBERSECURITY • MACHINE LEARNING</p>
+        <h1>Scan History</h1>
+        <p class="subtitle">Recent URL analyses saved on this computer</p>
+      </div>
+    </header>
+
+    <nav class="top-nav" aria-label="Main navigation">
+      <a class="nav-link" href="{{ url_for('index') }}">Analyze URL</a>
+      <a class="nav-link active" href="{{ url_for('history') }}">Scan history</a>
+      <a class="nav-link" href="{{ url_for('model_performance') }}">Model performance</a>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <section class="panel">
+      <div class="history-header">
+        <div>
+          <h2>Saved scans</h2>
+          <p>{{ total }} total scans. Showing the latest {{ scans|length }} (maximum 200).</p>
+        </div>
+        {% if scans %}
+        <form method="post" action="{{ url_for('clear_history') }}" onsubmit="return confirm('Delete all saved scan history from this computer?');">
+          <button class="button-danger" type="submit">Clear history</button>
+        </form>
+        {% endif %}
+      </div>
+
+      {% if scans %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Scanned at</th><th>URL</th><th>Prediction</th><th>Phishing probability</th></tr>
+          </thead>
+          <tbody>
+            {% for scan in scans %}
+            <tr>
+              <td class="date-cell">{{ scan['scanned_at'] }}</td>
+              <td class="url-cell" title="{{ scan['url'] }}">{{ scan['url'] }}</td>
+              <td>
+                {% if scan['label'] == 'Likely phishing' %}
+                <span class="status status-danger">{{ scan['label'] }}</span>
+                {% else %}
+                <span class="status status-good">{{ scan['label'] }}</span>
+                {% endif %}
+              </td>
+              <td>{{ '%.1f'|format(scan['phishing_probability']) }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">↗</div>
+        <h3>No scans saved yet</h3>
+        <p>Analyze a URL first. Successful predictions will appear here.</p>
+        <a class="button-link" href="{{ url_for('index') }}">Analyze your first URL</a>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="disclaimer">
+      <strong>Privacy note:</strong> History is stored locally in <code>data/phishguard_history.db</code>.
+      Do not analyze URLs containing private credentials, session IDs, API keys, or sensitive query parameters.
+    </section>
+    <footer>PhishGuard • B.Tech CSE Final-Year Project</footer>
+  </main>
+</body>
+</html>

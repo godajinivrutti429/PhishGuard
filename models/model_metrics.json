@@ -1,0 +1,48 @@
+{
+  "evaluated_at_utc": "2026-10-25T07:52:32+00:00",
+  "dataset_file": "data/phishing_urls.csv",
+  "model_name": "Random Forest",
+  "label_definition": {
+    "0": "benign",
+    "1": "phishing"
+  },
+  "source_rows": 116600,
+  "rows_after_cleaning": 116600,
+  "duplicates_removed": 1369,
+  "usable_unique_urls": 115231,
+  "label_counts": {
+    "benign": 98641,
+    "phishing": 16590
+  },
+  "train_rows": 92184,
+  "test_rows": 23047,
+  "metrics": {
+    "accuracy": 0.9795635006725387,
+    "precision_macro": 0.9670352234582139,
+    "recall_macro": 0.9489541240407888,
+    "f1_macro": 0.9577289066761951,
+    "benign": {
+      "precision": 0.9843074137410723,
+      "recall": 0.99194079781033,
+      "f1_score": 0.9881093635606271,
+      "support": 19729
+    },
+    "phishing": {
+      "precision": 0.9497630331753555,
+      "recall": 0.9059674502712477,
+      "f1_score": 0.9273484497917631,
+      "support": 3318
+    },
+    "roc_auc": 0.9904784116520869
+  },
+  "confusion_matrix": [
+    [
+      19570,
+      159
+    ],
+    [
+      312,
+      3006
+    ]
+  ]
+}

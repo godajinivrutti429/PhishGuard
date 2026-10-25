@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model Performance — PhishGuard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div class="logo">PG</div>
+      <div class="brand-copy">
+        <p class="eyebrow">CYBERSECURITY • MACHINE LEARNING</p>
+        <h1>Model Performance</h1>
+        <p class="subtitle">Evaluation results from the held-out dataset test split</p>
+      </div>
+    </header>
+
+    <nav class="top-nav" aria-label="Main navigation">
+      <a class="nav-link" href="{{ url_for('index') }}">Analyze URL</a>
+      <a class="nav-link" href="{{ url_for('history') }}">Scan history</a>
+      <a class="nav-link active" href="{{ url_for('model_performance') }}">Model performance</a>
+    </nav>
+
+    {% if metrics %}
+    <section class="metrics-intro">
+      <div>
+        <p class="eyebrow">EVALUATED MODEL</p>
+        <h2>{{ metrics['model_name'] }}</h2>
+        <p class="subtitle">{{ metrics['test_rows'] }} test rows · {{ metrics['usable_unique_urls'] }} unique URLs after cleaning</p>
+      </div>
+      <div class="evaluated-date">Saved at (UTC)<br><strong>{{ metrics['evaluated_at_utc'] }}</strong></div>
+    </section>
+
+    <section class="metric-grid" aria-label="Summary metrics">
+      <article class="metric-card primary-metric">
+        <span>Accuracy</span>
+        <strong>{{ '%.2f'|format(metrics['metrics']['accuracy'] * 100) }}%</strong>
+        <small>Overall correct predictions</small>
+      </article>
+      <article class="metric-card">
+        <span>Macro precision</span>
+        <strong>{{ '%.2f'|format(metrics['metrics']['precision_macro'] * 100) }}%</strong>
+        <small>Precision averaged by class</small>
+      </article>
+      <article class="metric-card">
+        <span>Macro recall</span>
+        <strong>{{ '%.2f'|format(metrics['metrics']['recall_macro'] * 100) }}%</strong>
+        <small>Recall averaged by class</small>
+      </article>
+      <article class="metric-card">
+        <span>Macro F1-score</span>
+        <strong>{{ '%.2f'|format(metrics['metrics']['f1_macro'] * 100) }}%</strong>
+        <small>Balance of precision and recall</small>
+      </article>
+      <article class="metric-card">
+        <span>ROC-AUC</span>
+        <strong>{% if metrics['metrics']['roc_auc'] is not none %}{{ '%.4f'|format(metrics['metrics']['roc_auc']) }}{% else %}N/A{% endif %}</strong>
+        <small>Ranking quality across thresholds</small>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Class-wise performance</h2>
+      <p>Recall measures the proportion of examples in a class that the model correctly finds. For phishing detection, missed phishing examples matter, so review phishing recall as well as overall accuracy.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1-score</th><th>Support</th></tr></thead>
+          <tbody>
+            {% for key, label in [('benign', 'Benign'), ('phishing', 'Phishing')] %}
+            <tr>
+              <td><strong>{{ label }}</strong></td>
+              <td>{{ '%.2f'|format(metrics['metrics'][key]['precision'] * 100) }}%</td>
+              <td>{{ '%.2f'|format(metrics['metrics'][key]['recall'] * 100) }}%</td>
+              <td>{{ '%.2f'|format(metrics['metrics'][key]['f1_score'] * 100) }}%</td>
+              <td>{{ metrics['metrics'][key]['support'] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Confusion matrix</h2>
+      <p>Rows are the true labels; columns are the model's predicted labels.</p>
+      <div class="table-wrap">
+        <table class="confusion-table">
+          <thead>
+            <tr><th>Actual ↓ / Predicted →</th><th>Benign</th><th>Phishing</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>Benign</th><td class="cm-correct">{{ metrics['confusion_matrix'][0][0] }}</td><td class="cm-error">{{ metrics['confusion_matrix'][0][1] }}</td></tr>
+            <tr><th>Phishing</th><td class="cm-error">{{ metrics['confusion_matrix'][1][0] }}</td><td class="cm-correct">{{ metrics['confusion_matrix'][1][1] }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="matrix-legend"><span><i class="legend-dot correct"></i> Correct predictions</span><span><i class="legend-dot error"></i> Incorrect predictions</span></div>
+    </section>
+
+    <section class="panel">
+      <h2>Dataset and split details</h2>
+      <div class="details-grid">
+        <div class="detail-item"><span>Source CSV rows</span><strong>{{ '{:,}'.format(metrics['source_rows']) }}</strong></div>
+        <div class="detail-item"><span>Usable unique URLs</span><strong>{{ '{:,}'.format(metrics['usable_unique_urls']) }}</strong></div>
+        <div class="detail-item"><span>Duplicate URLs removed</span><strong>{{ '{:,}'.format(metrics['duplicates_removed']) }}</strong></div>
+        <div class="detail-item"><span>Training rows</span><strong>{{ '{:,}'.format(metrics['train_rows']) }}</strong></div>
+        <div class="detail-item"><span>Testing rows</span><strong>{{ '{:,}'.format(metrics['test_rows']) }}</strong></div>
+        <div class="detail-item"><span>Benign / phishing labels</span><strong>{{ '{:,}'.format(metrics['label_counts']['benign']) }} / {{ '{:,}'.format(metrics['label_counts']['phishing']) }}</strong></div>
+      </div>
+    </section>
+
+    <section class="disclaimer">
+      <strong>Interpret results carefully:</strong> these metrics come from a held-out split of the selected dataset. They do not establish performance on every live website. Dataset bias, feature drift, and differences in new URLs can change real-world results. A model prediction is not proof that a site is safe or malicious.
+    </section>
+    {% else %}
+    <section class="panel">
+      <h2>No evaluation report found</h2>
+      <p>Train the model once using the updated trainer. It will save the model and the evaluation metrics used by this dashboard.</p>
+      <pre class="command-block">.\.venv\Scripts\python.exe train_model.py</pre>
+      <p>After training finishes, restart the Flask app and refresh this page.</p>
+    </section>
+    {% endif %}
+    <footer>PhishGuard • B.Tech CSE Final-Year Project</footer>
+  </main>
+</body>
+</html>

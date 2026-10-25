@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhishGuard — URL Risk Analyzer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div class="logo">PG</div>
+      <div class="brand-copy">
+        <p class="eyebrow">CYBERSECURITY • MACHINE LEARNING</p>
+        <h1>PhishGuard</h1>
+        <p class="subtitle">Educational phishing URL risk analyzer</p>
+      </div>
+    </header>
+
+    <nav class="top-nav" aria-label="Main navigation">
+      <a class="nav-link active" href="{{ url_for('index') }}">Analyze URL</a>
+      <a class="nav-link" href="{{ url_for('history') }}">Scan history</a>
+      <a class="nav-link" href="{{ url_for('model_performance') }}">Model performance</a>
+    </nav>
+
+    <section class="panel">
+      <h2>Analyze a URL</h2>
+      <p>Enter a URL to inspect selected characteristics and get a model prediction.</p>
+      <form method="post" action="{{ url_for('index') }}">
+        <label for="url">Website URL</label>
+        <div class="input-row">
+          <input id="url" name="url" type="text" value="{{ url }}" placeholder="https://example.com" maxlength="2048" required>
+          <button type="submit">Analyze URL</button>
+        </div>
+      </form>
+      {% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}
+    </section>
+
+    {% if result %}
+    <section class="panel result">
+      <div class="result-head">
+        <div>
+          <p class="eyebrow">MODEL PREDICTION</p>
+          <h2>{{ result.label }}</h2>
+        </div>
+        <div class="risk"><strong>{{ result.risk }}%</strong><span>estimated phishing probability</span></div>
+      </div>
+      <div class="meter"><div style="width: {{ result.risk }}%"></div></div>
+      <p class="notice">{{ result.note }}</p>
+      <h3>Extracted URL features</h3>
+      <div class="feature-grid">
+        {% for name, value in result.features.items() %}
+        <div class="feature"><span>{{ name.replace('_', ' ') }}</span><strong>{{ value }}</strong></div>
+        {% endfor %}
+      </div>
+      <p class="history-hint">This successful analysis was saved to your local scan history.</p>
+      <a class="text-link" href="{{ url_for('history') }}">View scan history →</a>
+    </section>
+    {% endif %}
+
+    <section class="disclaimer">
+      <strong>Important:</strong> This is a student demonstration, not a browser security product.
+      A low score does not prove a site is safe. Avoid entering sensitive information on unfamiliar websites.
+      Scan history is stored locally in a SQLite database. Do not submit URLs that contain passwords, private tokens, or sensitive query values.
+    </section>
+    <footer>PhishGuard • B.Tech CSE Final-Year Project</footer>
+  </main>
+</body>
+</html>
